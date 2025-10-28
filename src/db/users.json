@@ -1,0 +1,14 @@
+[
+  {
+    "user": "test2",
+    "password": "$2b$10$iSGSboiwbubOJteeemONyeaej2ikL2ON/0BKlgRtkSrqNG1n7Jh6i",
+    "id": "567e05ec-5dc1-41b6-b63a-73f558c839c7"
+  },
+  {
+    "user": "sqsux",
+    "email": "abc123@gmail.com",
+    "password": "$2b$10$klAbR5KSd2WsH76xGkNh.usanUmDJF1jQITN1m5DWRW5HlRpQHxXO",
+    "fuck": "lol",
+    "id": "ba88e90f-0caa-4e84-9914-36513bb8517f"
+  }
+]
