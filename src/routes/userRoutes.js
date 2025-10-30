@@ -1,10 +1,11 @@
 import express from "express";
 import { UserService } from "../services/userServices.js";
+import { auth } from "../middlewares/authMiddleware.js";
 
 const route = express.Router();
 
 route
-  .get("/", async (req, res) => {
+  .get("/", auth, async (req, res) => {
     let users = await new UserService().getAllUsers()
     res.json(users)
   })
@@ -22,20 +23,14 @@ route
   .post("/login", async (req, res) => {
     const { user, password } = req.body
     try {
-      const userService = new UserService();
-      const users = await userService.getAllUsers();
-      const foundUser = users.find((u) => u.user === user)
-
-      if (!foundUser) {
-        res.json("Incorrect username or password.")
-      }
-
-      const validPass = await bcrpyt.compare(validPass, foundUser.password )
-      if (!validPass) {
-        res.json("Incorrect username or password.")
-      }
-    } catch (error) {
+      const userService = new UserService()
+      const r = await userService.authorize(user, password)
+      res.json(r)
       
+      console.log('Success')
+    } catch (error) {
+      console.error("error:", error)
+      res.json("error", error)
     }
   })
   .patch("/", async (req, res) => {

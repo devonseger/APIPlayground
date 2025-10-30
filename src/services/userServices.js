@@ -1,6 +1,7 @@
 import fs from "fs";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken"
 
 export class UserService {
   constructor() {
@@ -97,5 +98,75 @@ export class UserService {
         console.error("Error deleting user:", error)
         return {success: false, error: error.message}
     }
+  }
+
+  async updateUser(id, updateData) {
+    try {
+      const users = this._readDb();
+      // find the index of user
+      const userIndex = users.findIndex(u => u.id === id)
+
+      if (userIndex === -1) {
+        throw new Error("User not found!")
+      }
+      // if updating password then we need to hash it
+      if (updateData.password) {
+        updateData.password = await bcrypt.hash(updateData.password)
+      }
+      
+      // select the user at index
+      users[userIndex] = {
+        // spread the user data
+        ...users[userIndex],
+        // spread the updated data
+        ...updateData,
+        updatedAt: new Date().toISOString()
+      };
+
+      this._writeDb(users);
+
+      // return the user without password
+
+      const {password, ...safeUser } = users[userIndex];
+      return { success: true, user: safeUser}
+  
+    } catch (error) {
+      console.error("Error updating user:", error)    
+    }
+  }
+
+  async authorize(user, pass) {
+    try {
+      const users = await this._readDb()
+      const foundUser = users.find((u) => u.user === user)
+      console.log('testing foundUser', foundUser)
+      if (!foundUser) {
+        return {success: false, message: 'Incorrect username or password.'}
+      }
+      const validPass = bcrypt.compare(pass, foundUser.password)
+
+      if (!validPass) {
+        return {success: false, message: 'Incorrect username or password.'}
+      }
+
+      if (foundUser && validPass) {
+        // Generate JWT & Refresh token, store hashed refresh tokens with user.
+        const token = jwt.sign({ user: foundUser }, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '15m'})
+        const refreshToken = crypto.randomBytes(64).toString('hex')
+        const hashedRefresh = await bcrypt.hash(refreshToken, this.saltRounds)
+
+        // Store 
+        await this.updateUser(foundUser.id, {refresh: hashedRefresh, jwt: token})
+        return {success: true, message: 'Authorized', token, refreshToken}
+      }
+  
+    } catch(err) {
+      console.error('Error authorizing user:', err)
+      }
+  }
+
+  async refresh(id, refreshToken) {
+    
+
   }
 }
